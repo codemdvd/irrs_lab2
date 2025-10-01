@@ -1,1 +1,8 @@
-.venv
+# Docker / ES
+.es/* 
+/data/*
+/tmp/*
+# Python
+__pycache__/
+*.pyc
+.env

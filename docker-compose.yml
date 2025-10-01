@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.3
+    container_name: es-dev
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: ${ES_SECURITY_ENABLED:-false}
+      ES_JAVA_OPTS: ${ES_JAVA_OPTS:-"-Xms1g -Xmx1g"}
+      cluster.name: ${ES_CLUSTER_NAME:-es-local}
+      node.name: ${ES_NODE_NAME:-es-node-1}
+      http.max_content_length: 100mb
+    ports:
+      - "${ES_PORT:-9200}:9200"
+      - "${ES_TCP_PORT:-9300}:9300"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200 >/dev/null || exit 1"]
+      interval: 5s
+      timeout: 2s
+      retries: 30
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.14.3
+    container_name: kibana-dev
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "${KIBANA_PORT:-5601}:5601"
+    profiles: ["kibana"]
+
+volumes:
+  esdata:
